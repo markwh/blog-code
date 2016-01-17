@@ -1,0 +1,136 @@
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+I've been daydreaming in the dark about longer daylight hours, so I drew some pictures to cheer myself up. 
+
+
+```{r}
+# install.packages("insol")
+library(insol)
+library(reshape2)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+Here's one of day length (sunrise to sunset) for the next 2 months (here in Amherst, MA, that is):
+
+```{r}
+
+startdate = Sys.time()
+ndays = 60
+enddate = Sys.time() + days(ndays)
+
+dls = daylength(42.4, -72.5, jd = JD(startdate):JD(enddate), -5)
+
+dls %>% 
+  as.data.frame() %>% 
+  mutate(Date = seq.Date(from = as.Date(startdate), 
+         by = 1, length.out = ndays)) %>% 
+  ggplot(aes(x = Date, y = daylen)) +
+  geom_line() +
+  ylab("hours of daylight") +
+  scale_y_continuous(breaks = c(8:13), labels = as.character(c(8:13))) +
+  ylim(c(8, 13)) +
+  theme_bw()
+```
+
+Ahh, things are ramping up. And more quicly every day. 
+
+Now here's a picture of the sunrise and sunset times:
+
+```{r}
+dls %>% 
+  as.data.frame() %>% 
+  mutate(Date = seq.Date(from = as.Date(startdate, tz = "US/Eastern"), 
+       by = 1, length.out = ndays),
+       tz = format(as.POSIXct(Date, tz = "US/Eastern"), 
+                   format = "%Z")) %>%
+  mutate(sunrise = ifelse(tz == "EST", sunrise, sunrise + 1),
+         sunset = ifelse(tz == "EST", sunset, sunset + 1)) %>% 
+  mutate(sunrise = as.POSIXct("2016-01-01 00:00:00") + 
+           round(seconds(sunrise * 3600))) %>% 
+  mutate(sunset = as.POSIXct("2016-01-01 00:00:00") + 
+           round(seconds(sunset * 3600))) %>% 
+  ggplot(aes(x = Date, ymin = sunrise, ymax = sunset)) +
+  geom_ribbon(fill = "white", alpha = 0.95) +
+  scale_y_datetime(
+    limits = c(as.POSIXct("2016-01-01 00:00:00"), 
+               as.POSIXct("2016-01-02 00:00:00")),
+    breaks = seq.POSIXt(from = as.POSIXct("2016-01-01 00:00:00"), 
+                        to = as.POSIXct("2016-01-02 00:00:00"), 
+                        length.out = 9),
+    labels = paste0(c(0:7, 0) * 3, ":00")) +
+  scale_x_date(c(as.Date(startdate), as.Date(enddate)), expand = c(0, 0)) + 
+  labs(x = "Date", y = "Time") +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "gray20"))
+```
+
+Yes, daylight savings is less than 2 months away!
+
+I also drew some pictures with a wider field of view. Here's day lengths for the next year:
+
+```{r}
+startdate = Sys.time()
+ndays = 366
+enddate = Sys.time() + days(ndays)
+
+dls = daylength(42.4, -72.5, jd = JD(startdate):JD(enddate), -5)
+
+
+dls %>% 
+  as.data.frame() %>% 
+  mutate(Date = seq.Date(from = as.Date(startdate, tz = "US/Eastern"), 
+         by = 1, length.out = ndays + 1),
+         tz = format(as.POSIXct(Date, tz = "US/Eastern"), 
+                     format = "%Z")) %>%
+  mutate(sunrise = ifelse(tz == "EST", sunrise, sunrise + 1),
+         sunset = ifelse(tz == "EST", sunset, sunset + 1)) %>% 
+  ggplot(aes(x = Date, y = daylen)) +
+  geom_line() +
+  ylab("hours of daylight") +
+  scale_y_continuous(breaks = c(8:16), labels = as.character(c(8:16))) +
+  # ylim(c(8, 13)) +
+  theme_bw()
+```
+
+Even though it's almost a month since the solstice the days are very near the minimum length. But not for long.
+
+And the sunrise / sunsets for the next year:
+
+```{r}
+
+dls %>% 
+  as.data.frame() %>% 
+  mutate(Date = seq.Date(from = as.Date(startdate, tz = "US/Eastern"), 
+       by = 1, length.out = ndays + 1),
+       tz = format(as.POSIXct(Date, tz = "US/Eastern"), 
+                   format = "%Z")) %>%
+  mutate(sunrise = ifelse(tz == "EST", sunrise, sunrise + 1),
+         sunset = ifelse(tz == "EST", sunset, sunset + 1)) %>% 
+  mutate(sunrise = as.POSIXct("2016-01-01 00:00:00") + 
+           round(seconds(sunrise * 3600))) %>% 
+  mutate(sunset = as.POSIXct("2016-01-01 00:00:00") + 
+           round(seconds(sunset * 3600))) %>% 
+  ggplot(aes(x = Date, ymin = sunrise, ymax = sunset)) +
+  geom_ribbon(fill = "white", alpha = 0.95) +
+  scale_y_datetime(
+    limits = c(as.POSIXct("2016-01-01 00:00:00"), 
+               as.POSIXct("2016-01-02 00:00:00")),
+    breaks = seq.POSIXt(from = as.POSIXct("2016-01-01 00:00:00"), 
+                        to = as.POSIXct("2016-01-02 00:00:00"), 
+                        length.out = 9),
+    labels = paste0(c(0:7, 0) * 3, ":00")) +
+  scale_x_date(c(as.Date(startdate), as.Date(enddate)), expand = c(0, 0)) + 
+  labs(x = "Date", y = "Time") +
+  theme_bw() +
+  theme(panel.background = element_rect(fill = "gray20"))
+```
+
+I always love a beautiful sunrise / sunset. How often do you get to see both in the same picture? 
+
